@@ -1714,6 +1714,458 @@ function PhotoAlbumTab() {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSPORTATION GUIDE — interactive park-to-park route finder
+// ═══════════════════════════════════════════════════════════════════════════
+
+const TRANSPORT_ROUTES = {
+  mk: {
+    ep: {
+      method: "Monorail",
+      methodColor: P.lilac,
+      icon: "🚃",
+      time: "30–45 min",
+      steps: [
+        "Exit Magic Kingdom through the main entrance",
+        "Board the Express Monorail or ferry to the Transportation & Ticket Center (TTC)",
+        "At TTC, transfer to the EPCOT Monorail",
+        "Ride to EPCOT's front entrance",
+      ],
+      tip: "If you're near World Showcase at EPCOT heading back, budget extra walk time to reach the front monorail station.",
+      scenic: true,
+    },
+    hs: {
+      method: "Direct Bus",
+      methodColor: P.sage || "#8B9D5C",
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Magic Kingdom through the main entrance",
+        "Go to the bus loop outside Magic Kingdom",
+        "Find the Hollywood Studios sign and board the direct bus",
+      ],
+      tip: "The bus drops you closer to Magic Kingdom's entrance than rideshare does — rideshare usually drops at the TTC, not the gate.",
+      scenic: false,
+    },
+    ak: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Magic Kingdom through the main entrance",
+        "Go to the bus loop outside Magic Kingdom",
+        "Board the Animal Kingdom bus",
+      ],
+      tip: "Animal Kingdom often closes earlier than other parks. If your car is parked there and you're finishing at Magic Kingdom, getting back to it can be inconvenient late at night.",
+      scenic: false,
+    },
+  },
+  ep: {
+    mk: {
+      method: "Monorail",
+      methodColor: P.lilac,
+      icon: "🚃",
+      time: "30–45 min",
+      steps: [
+        "Walk to EPCOT's front entrance (monorail station)",
+        "Board the EPCOT Monorail to the Transportation & Ticket Center (TTC)",
+        "At TTC, transfer to the Magic Kingdom Monorail or take the ferry",
+        "Arrive at Magic Kingdom",
+      ],
+      tip: "If you're in World Showcase, the walk to the front entrance adds significant time — budget 45–75 min total.",
+      scenic: true,
+    },
+    hs: {
+      method: "Skyliner, Boat or Walk",
+      methodColor: P.gold,
+      icon: "🚡",
+      time: "20–35 min",
+      steps: [
+        "Exit EPCOT through International Gateway (back entrance, near France/UK)",
+        "Choose your route:",
+        "   🚡 Skyliner: Board → transfer at Caribbean Beach → ride to Hollywood Studios",
+        "   ⛵ Boat: Board a FriendShip Boat → stops at BoardWalk → arrives at Hollywood Studios",
+        "   🚶 Walk: Follow the path through BoardWalk area to Hollywood Studios",
+      ],
+      tip: "This is the easiest park hop at Walt Disney World. Skyliner is the most fun, walking is fastest if weather cooperates.",
+      scenic: true,
+      highlight: true,
+    },
+    ak: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit EPCOT through the front entrance",
+        "Go to the bus loop",
+        "Board the Animal Kingdom bus",
+      ],
+      tip: "If you're deep in World Showcase, it's a long walk to the front bus area — allow extra time.",
+      scenic: false,
+    },
+  },
+  hs: {
+    mk: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Hollywood Studios",
+        "Go to the bus loop",
+        "Board the Magic Kingdom bus",
+      ],
+      tip: "The bus drops near the TTC — you'll still need the monorail or ferry for the final leg to Magic Kingdom's gate.",
+      scenic: false,
+    },
+    ep: {
+      method: "Skyliner, Boat or Walk",
+      methodColor: P.gold,
+      icon: "🚡",
+      time: "20–35 min",
+      steps: [
+        "Exit Hollywood Studios",
+        "Choose your route:",
+        "   🚡 Skyliner: Board → transfer at Caribbean Beach → ride to EPCOT's International Gateway",
+        "   ⛵ Boat: Board a FriendShip Boat → arrives at EPCOT's International Gateway",
+        "   🚶 Walk: Follow the path toward BoardWalk → enter EPCOT through International Gateway",
+      ],
+      tip: "International Gateway is EPCOT's back entrance — you'll enter near France and UK in World Showcase, not the front.",
+      scenic: true,
+      highlight: true,
+    },
+    ak: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Hollywood Studios",
+        "Go to the bus loop",
+        "Board the Animal Kingdom bus",
+      ],
+      tip: "Bus only — no Skyliner, boat or walking path exists between these two parks.",
+      scenic: false,
+    },
+  },
+  ak: {
+    mk: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Animal Kingdom",
+        "Go to the bus loop",
+        "Board the Magic Kingdom bus",
+      ],
+      tip: "If you drove and parked at Animal Kingdom, your car will still be there when you return — plan for this if you're ending the night at Magic Kingdom.",
+      scenic: false,
+    },
+    ep: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Animal Kingdom",
+        "Go to the bus loop",
+        "Board the EPCOT bus",
+      ],
+      tip: "Simple and direct. You'll arrive at EPCOT's front entrance.",
+      scenic: false,
+    },
+    hs: {
+      method: "Direct Bus",
+      methodColor: P.mint,
+      icon: "🚌",
+      time: "45–60 min",
+      steps: [
+        "Exit Animal Kingdom",
+        "Go to the bus loop",
+        "Board the Hollywood Studios bus",
+      ],
+      tip: "Bus only between these two parks — no monorail, Skyliner, boat, or walking path available.",
+      scenic: false,
+    },
+  },
+};
+
+// Best 1-day park hopper order
+const BEST_ORDER = [
+  { park:"ak", label:"Animal Kingdom 🦁", time:"Morning", reason:"Opens early, gets very hot midday — tackle it first" },
+  { park:"hs", label:"Hollywood Studios 🎬", time:"Midday",  reason:"Use midday Lightning Lanes for top rides when other parks peak" },
+  { park:"ep", label:"EPCOT 🌍",           time:"Late Afternoon", reason:"Best park for food, snacks and a slower mid-evening pace" },
+  { park:"mk", label:"Magic Kingdom 🏰",   time:"Evening", reason:"Best nighttime finish — fireworks, lit-up castle, late rides" },
+];
+
+// Quick reference matrix (From → To)
+const MATRIX = {
+  from: ["mk","ep","hs","ak"],
+  to:   ["mk","ep","hs","ak"],
+  data: {
+    mk: { mk:"—",               ep:"🚃 Monorail",         hs:"🚌 Direct bus",     ak:"🚌 Direct bus" },
+    ep: { mk:"🚃 Monorail",     ep:"—",                   hs:"🚡/⛵/🚶 Multiple", ak:"🚌 Direct bus" },
+    hs: { mk:"🚌 Direct bus",   ep:"🚡/⛵/🚶 Multiple",   hs:"—",                 ak:"🚌 Direct bus" },
+    ak: { mk:"🚌 Direct bus",   ep:"🚌 Direct bus",        hs:"🚌 Direct bus",     ak:"—"             },
+  },
+};
+const PARK_LABELS = { mk:"Magic Kingdom", ep:"EPCOT", hs:"Hollywood Studios", ak:"Animal Kingdom" };
+const PARK_SHORT  = { mk:"MK", ep:"EP", hs:"HS", ak:"AK" };
+
+function TransportationTab() {
+  const [from, setFrom] = useState("ak");
+  const [to,   setTo]   = useState("hs");
+  const [view, setView] = useState("finder"); // "finder" | "order" | "matrix" | "tips"
+  const parks = ["mk","ep","hs","ak"];
+
+  const route = from !== to ? TRANSPORT_ROUTES[from]?.[to] : null;
+
+  return (
+    <div>
+      {/* Sub-nav */}
+      <div style={{display:"flex",gap:6,marginBottom:18,flexWrap:"wrap"}}>
+        {[
+          {id:"finder",  label:"🗺️ Route Finder"},
+          {id:"order",   label:"📋 Best Day Order"},
+          {id:"matrix",  label:"⚡ Quick Matrix"},
+          {id:"tips",    label:"💡 Off-Property Tips"},
+        ].map(v=>(
+          <button key={v.id} onClick={()=>setView(v.id)}
+            style={{padding:"7px 14px",borderRadius:10,border:`2px solid ${P.pink}`,background:view===v.id?P.pink:"transparent",color:view===v.id?"#fff":P.pink,fontWeight:700,fontSize:13,cursor:"pointer"}}>
+            {v.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── ROUTE FINDER ── */}
+      {view==="finder" && (
+        <div>
+          <Callout icon="🚌">
+            Off-property guests can use <strong>all Disney transportation free</strong> — buses, monorail, Skyliner, boats. You don't need to be staying at a Disney resort.
+          </Callout>
+
+          <Card style={{marginBottom:18}}>
+            <div style={{fontWeight:800,fontSize:15,color:P.dark,marginBottom:16}}>Find your route</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:12,alignItems:"center",marginBottom:8}}>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,color:P.gray,textTransform:"uppercase",letterSpacing:.6,display:"block",marginBottom:6}}>From</label>
+                <select value={from} onChange={e=>{setFrom(e.target.value); if(e.target.value===to) setTo(parks.find(p=>p!==e.target.value));}}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:10,border:`2px solid ${P.pink}`,fontSize:14,fontWeight:700,color:P.dark,background:P.cream}}>
+                  {parks.map(p=><option key={p} value={p}>{PARKS[p]?.emoji} {PARKS[p]?.name}</option>)}
+                </select>
+              </div>
+              <div style={{textAlign:"center",fontSize:22,fontWeight:900,color:P.pink,marginTop:20}}>→</div>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,color:P.gray,textTransform:"uppercase",letterSpacing:.6,display:"block",marginBottom:6}}>To</label>
+                <select value={to} onChange={e=>setTo(e.target.value)}
+                  style={{width:"100%",padding:"10px 12px",borderRadius:10,border:`2px solid ${P.pink}`,fontSize:14,fontWeight:700,color:P.dark,background:P.cream}}>
+                  {parks.filter(p=>p!==from).map(p=><option key={p} value={p}>{PARKS[p]?.emoji} {PARKS[p]?.name}</option>)}
+                </select>
+              </div>
+            </div>
+          </Card>
+
+          {route && (
+            <div style={{display:"grid",gap:12}}>
+              {/* Method header */}
+              <div style={{background:`linear-gradient(135deg,${P.dark},${P.mid})`,borderRadius:16,padding:"18px 20px",color:"#fff",display:"flex",alignItems:"center",gap:14}}>
+                <div style={{fontSize:36}}>{route.icon}</div>
+                <div>
+                  <div style={{fontSize:12,opacity:0.7,fontWeight:600,textTransform:"uppercase",letterSpacing:.8}}>Best free route</div>
+                  <div style={{fontSize:22,fontWeight:900}}>{route.method}</div>
+                  <div style={{fontSize:13,opacity:0.85,marginTop:2}}>⏱ Budget {route.time} door to door</div>
+                </div>
+                {route.highlight && (
+                  <div style={{marginLeft:"auto",background:P.gold,color:P.dark,borderRadius:99,padding:"4px 12px",fontSize:11,fontWeight:800,whiteSpace:"nowrap"}}>Easiest hop!</div>
+                )}
+              </div>
+
+              {/* Step by step */}
+              <Card>
+                <div style={{fontWeight:800,fontSize:14,color:P.dark,marginBottom:12}}>Step by step</div>
+                <div style={{display:"grid",gap:8}}>
+                  {route.steps.map((step,i)=>{
+                    const isSub = step.startsWith("   ");
+                    return (
+                      <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",paddingLeft:isSub?28:0}}>
+                        {!isSub && (
+                          <div style={{width:24,height:24,borderRadius:99,background:`linear-gradient(135deg,${P.pink},${P.mid})`,color:"#fff",fontSize:11,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+                            {i+1}
+                          </div>
+                        )}
+                        <div style={{fontSize:13,color:isSub?P.mid:P.dark,lineHeight:1.5,fontWeight:isSub?600:400,paddingTop:4}}>{step.trim()}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+
+              {/* Warning / tip */}
+              {route.tip && (
+                <div style={{background:P.soft,border:`1.5px solid ${P.border}`,borderRadius:12,padding:"12px 16px",display:"flex",gap:10}}>
+                  <span style={{fontSize:18,flexShrink:0}}>⚠️</span>
+                  <div style={{fontSize:13,color:P.dark,lineHeight:1.6}}>{route.tip}</div>
+                </div>
+              )}
+
+              {/* Rideshare alternative */}
+              <Card style={{borderLeft:`4px solid ${P.gold}`}}>
+                <div style={{fontWeight:800,fontSize:13,color:P.dark,marginBottom:6}}>🚗 Rideshare alternative</div>
+                <div style={{fontSize:13,color:P.gray,lineHeight:1.5}}>
+                  Uber/Lyft is available between all parks. Generally takes <strong>15–30 min</strong> plus wait time.
+                  {from==="mk" || to==="mk" ? " Note: rideshare to Magic Kingdom drops at the TTC, not the gate — you'll still need the monorail or ferry." : " Usually a good time-saving option if your group is in a hurry."}
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── BEST DAY ORDER ── */}
+      {view==="order" && (
+        <div>
+          <Card style={{marginBottom:16,background:`linear-gradient(135deg,${P.dark},${P.mid})`,color:"#fff"}}>
+            <div style={{fontSize:12,opacity:0.7,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>Recommended 1-day park hopper order</div>
+            <div style={{fontSize:20,fontWeight:900,marginTop:4}}>Animal Kingdom → HS → EPCOT → Magic Kingdom</div>
+          </Card>
+
+          <div style={{display:"grid",gap:12,marginBottom:20}}>
+            {BEST_ORDER.map((stop,i)=>{
+              const pk = PARKS[stop.park];
+              return (
+                <Card key={stop.park} style={{borderLeft:`5px solid ${pk?.color||P.pink}`}}>
+                  <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+                    <div style={{background:pk?.color||P.pink,color:"#fff",width:38,height:38,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,flexShrink:0}}>
+                      {i+1}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6,marginBottom:4}}>
+                        <div style={{fontWeight:800,fontSize:15,color:P.dark}}>{stop.label}</div>
+                        <span style={{background:pk?.color+"22",color:pk?.color||P.pink,borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:700}}>{stop.time}</span>
+                      </div>
+                      <div style={{fontSize:13,color:P.gray,lineHeight:1.5}}>{stop.reason}</div>
+                      {i < BEST_ORDER.length-1 && (
+                        <div style={{marginTop:10,padding:"8px 12px",background:P.cream,borderRadius:8,fontSize:12,color:P.mid,fontWeight:600}}>
+                          {i===0 && "→ Direct bus to Hollywood Studios (45–60 min)"}
+                          {i===1 && "→ Skyliner, boat or walk to EPCOT International Gateway (20–35 min) ⭐ Easiest hop!"}
+                          {i===2 && "→ Monorail from EPCOT front entrance to Magic Kingdom via TTC (45–75 min)"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Card style={{borderLeft:`4px solid ${P.gold}`}}>
+            <div style={{fontWeight:800,fontSize:14,color:P.dark,marginBottom:8}}>🚗 Driving this route</div>
+            <div style={{fontSize:13,color:P.gray,lineHeight:1.7}}>
+              Your daily parking pass is valid at all 4 parks the same day — you won't pay again when you re-park.<br/>
+              <strong style={{color:P.dark}}>Suggested driving order:</strong> Park at Animal Kingdom → drive to Hollywood Studios → drive to EPCOT → drive to Magic Kingdom/TTC. This ensures your car ends the night at Magic Kingdom, not at an early-closing Animal Kingdom.
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ── QUICK MATRIX ── */}
+      {view==="matrix" && (
+        <div>
+          <Callout icon="⚡">Tap any cell to jump straight to that route's step-by-step directions.</Callout>
+          <Card style={{padding:0,overflow:"hidden"}}>
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:340}}>
+                <thead>
+                  <tr>
+                    <th style={{padding:"10px 12px",background:P.dark,color:"#fff",fontWeight:700,fontSize:11,textAlign:"left"}}>FROM ↓ / TO →</th>
+                    {MATRIX.to.map(p=>(
+                      <th key={p} style={{padding:"10px 10px",background:P.dark,color:"#fff",fontWeight:700,fontSize:11,textAlign:"center",whiteSpace:"nowrap"}}>
+                        {PARKS[p]?.emoji} {PARK_SHORT[p]}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {MATRIX.from.map((fp,fi)=>(
+                    <tr key={fp} style={{background:fi%2===0?P.white:P.soft}}>
+                      <td style={{padding:"10px 12px",fontWeight:800,color:P.dark,fontSize:12,whiteSpace:"nowrap"}}>
+                        {PARKS[fp]?.emoji} {PARK_SHORT[fp]}
+                      </td>
+                      {MATRIX.to.map(tp=>{
+                        const val = MATRIX.data[fp][tp];
+                        const isSame = val==="—";
+                        const isEasy = val.includes("Multiple");
+                        const isMonorail = val.includes("Monorail");
+                        const bg = isSame?"#f0f0f0" : isEasy?P.gold+"33" : isMonorail?P.lilac+"33" : P.mint+"33";
+                        const textColor = isSame?P.gray : isEasy?P.peach : isMonorail?P.mid : P.dark;
+                        return (
+                          <td key={tp} onClick={()=>{ if(!isSame){ setFrom(fp); setTo(tp); setView("finder"); }}}
+                            style={{padding:"10px 8px",textAlign:"center",background:bg,cursor:isSame?"default":"pointer",color:textColor,fontWeight:600,fontSize:11,lineHeight:1.4}}>
+                            {val}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Legend */}
+          <div style={{display:"flex",flexWrap:"wrap",gap:10,marginTop:12}}>
+            {[
+              {color:P.mint,  label:"Direct bus (all parks)"},
+              {color:P.lilac, label:"Monorail (MK ↔ EPCOT)"},
+              {color:P.gold,  label:"Multiple options (EPCOT ↔ HS)"},
+            ].map(l=>(
+              <div key={l.label} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:P.dark}}>
+                <div style={{width:12,height:12,borderRadius:3,background:l.color,opacity:.6}}/>
+                {l.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── OFF-PROPERTY TIPS ── */}
+      {view==="tips" && (
+        <div>
+          <div style={{display:"grid",gap:12}}>
+            {[
+              {icon:"🚫",color:"#E74C3C",title:"Don't park at Disney Springs to get to the parks",
+                body:"This used to be a popular hack. Disney now requires guests on the Disney Springs buses to have a valid dining or resort reservation. You may be asked to show proof — don't risk it."},
+              {icon:"🌙",color:P.peach,title:"Don't leave your car at a park that closes early",
+                body:"Animal Kingdom often closes before other parks. If you start there and finish at Magic Kingdom, your car will still be back at Animal Kingdom. Either drive between parks or plan to return there."},
+              {icon:"⏱",color:P.mid,title:"Budget 45–90 minutes for every park hop",
+                body:"Even short rides have overhead: exiting the park, walking to transportation, waiting, riding, going through security, entering the new park. Never assume it takes less than 45 minutes."},
+              {icon:"🅿️",color:P.mint,title:"Your daily parking pass covers all 4 parks",
+                body:"Pay once when you first arrive at any park. That same receipt/pass is valid at all four theme parks that same day — flash it when you re-park and you won't be charged again."},
+              {icon:"🚗",color:P.gold,title:"Rideshare to Magic Kingdom has a hidden complication",
+                body:"Rideshare drops you at the Transportation & Ticket Center (TTC), not the Magic Kingdom gate. From there you still need the monorail or ferry to get to the park entrance — factor that into your timing."},
+              {icon:"✅",color:"#2ECC71",title:"You have full access to all Disney transportation",
+                body:"Off-property guests can freely use Disney buses, monorails, Skyliners and boats. No resort stay required. Disney's own policy states all guests may use this complimentary system."},
+            ].map(tip=>(
+              <Card key={tip.title} style={{borderLeft:`4px solid ${tip.color}`}}>
+                <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+                  <div style={{fontSize:26,flexShrink:0}}>{tip.icon}</div>
+                  <div>
+                    <div style={{fontWeight:800,fontSize:14,color:P.dark,marginBottom:4}}>{tip.title}</div>
+                    <div style={{fontSize:13,color:P.gray,lineHeight:1.6}}>{tip.body}</div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 const TABS = [
   {id:"home",label:"🏰 Home"},
@@ -1722,6 +2174,7 @@ const TABS = [
   {id:"ll",label:"⚡ LL Scheduler"},
   {id:"characters",label:"🎭 Characters"},
   {id:"photos",label:"📸 Photo Album"},
+  {id:"transport",label:"🚌 Transportation"},
   {id:"mk",label:"Magic Kingdom"},
   {id:"ep",label:"EPCOT"},
   {id:"hs",label:"Hollywood Studios"},
@@ -1852,6 +2305,7 @@ export default function App() {
                 {label:"⚡ LL Scheduler",desc:"Time-block your Lightning Lanes",tab:"ll",color:P.dark},
                 {label:"🎭 Characters",desc:"Track meets & time your waits",tab:"characters",color:P.rose},
                 {label:"📸 Photo Album",desc:"Organize & share trip photos",tab:"photos",color:P.gold},
+                {label:"🚌 Transportation",desc:"Park-to-park routes & tips",tab:"transport",color:P.mint},
                 {label:"🎢 Ride Guides",desc:"Tips, tiers, maps & Lightning Lane",tab:"mk",color:P.lilac},
                 {label:"🍽️ Dining",desc:"Plans, restaurants & must-do's",tab:"dining",color:P.peach},
                 {label:"🏨 Resorts",desc:"Hotels, transport & amenities",tab:"resorts",color:P.mint},
@@ -1936,6 +2390,19 @@ export default function App() {
               </div>
             </div>
             <PhotoAlbumTab/>
+          </>
+        )}
+
+        {tab==="transport" && (
+          <>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+              <Mickey size={30} color={P.mint}/>
+              <div>
+                <h2 style={{margin:0,color:P.dark,fontWeight:900}}>Transportation Guide</h2>
+                <p style={{margin:0,fontSize:13,color:"#888"}}>Park-to-park routes, best day order & tips</p>
+              </div>
+            </div>
+            <TransportationTab/>
           </>
         )}
 
