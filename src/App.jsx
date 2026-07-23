@@ -518,7 +518,7 @@ function TripPlannerTab() {
         <div style={{display:"flex",alignItems:"center",gap:16,marginTop:14,flexWrap:"wrap"}}>
           <label style={{fontWeight:700,fontSize:13,color:P.mid}}>📅 Number of Days:</label>
           <div style={{display:"flex",gap:6}}>
-            {[1,2,3,4,5,6,7,8,9,10].map(n=>(
+            {[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(n=>(
               <button key={n} onClick={()=>setNumDays(n)}
                 style={{width:34,height:34,borderRadius:99,border:`2px solid ${P.pink}`,background:numDays===n?P.pink:"transparent",color:numDays===n?"#fff":P.pink,fontWeight:800,cursor:"pointer",fontSize:14}}>
                 {n}
@@ -2335,6 +2335,250 @@ function TransportationTab() {
   );
 }
 
+// ─── PACKING LIST ─────────────────────────────────────────────────────────────
+const ESSENTIAL_PACKING = [
+  {
+    cat:"🎟️ Park Essentials", color:P.pink,
+    items:[
+      {id:"e-1",  label:"Disney MagicBand or MagicMobile on phone",    note:"Set up in My Disney Experience before you leave"},
+      {id:"e-2",  label:"Park tickets linked in My Disney Experience",  note:"Confirm all tickets are showing correctly"},
+      {id:"e-3",  label:"Lightning Lane strategy planned",               note:"Know your 7 AM LLSP list before arrival day"},
+      {id:"e-4",  label:"Dining reservations confirmed",                 note:"Screenshot them in case of app issues in the park"},
+      {id:"e-5",  label:"Portable phone charger (20,000 mAh+)",         note:"Parks drain battery fast — bigger is better"},
+      {id:"e-6",  label:"Small crossbody bag or fanny pack",             note:"Backpacks get heavy fast; hands-free is better"},
+    ],
+  },
+  {
+    cat:"👟 Clothing & Comfort", color:P.lilac,
+    items:[
+      {id:"e-7",  label:"Broken-in walking shoes",                       note:"Never wear new shoes to Disney — blisters guaranteed"},
+      {id:"e-8",  label:"Extra socks (1–2 pairs per day)",               note:"Wet or sweaty socks are the #1 comfort killer"},
+      {id:"e-9",  label:"Comfortable shorts or pants",                   note:"Avoid jeans in summer — brutal in Florida heat"},
+      {id:"e-10", label:"Light layer / jacket for evening",              note:"Parks get cool after dark, especially in winter"},
+      {id:"e-11", label:"Rain poncho",                                    note:"Florida afternoon thunderstorms happen almost daily"},
+      {id:"e-12", label:"Change of clothes (1 set in bag)",              note:"Especially important for water rides and traveling with kids"},
+    ],
+  },
+  {
+    cat:"☀️ Sun, Heat & Weather", color:P.peach,
+    items:[
+      {id:"e-13", label:"Sunscreen SPF 50+",                             note:"Reapply every 2 hours — Florida sun is intense year-round"},
+      {id:"e-14", label:"Sunglasses",                                     note:"Polarized lenses are best for Florida brightness"},
+      {id:"e-15", label:"Sun hat or baseball cap",                        note:"Shade on your face and neck makes a huge difference"},
+      {id:"e-16", label:"Cooling towel",                                  note:"Wet it, snap it, instant relief — essential in summer"},
+      {id:"e-17", label:"Mini hand fan or battery fan",                   note:"Clip-on stroller fans work great for kids too"},
+      {id:"e-18", label:"Insulated water bottle (32 oz+)",               note:"Free ice water at any quick-service location if you ask"},
+    ],
+  },
+  {
+    cat:"🍿 Snacks & Food", color:P.gold,
+    items:[
+      {id:"e-19", label:"Protein bars or granola bars",                  note:"Keeps energy up between meals without park prices"},
+      {id:"e-20", label:"Small snack pouch (trail mix, crackers, etc.)", note:"Park snack prices are high — bring your own fillers"},
+      {id:"e-21", label:"Empty reusable snack bags",                     note:"Great for leftover food or wet swimsuits"},
+      {id:"e-22", label:"Gum or mints",                                   note:"Gum isn't sold in the parks — bring your own"},
+    ],
+  },
+  {
+    cat:"🩹 Health & Safety", color:P.mint,
+    items:[
+      {id:"e-23", label:"Blister bandages (Compeed or Band-Aid)",        note:"Pack them even if you think you won't need them"},
+      {id:"e-24", label:"Pain reliever (Advil / Tylenol)",               note:"Headaches and foot pain are common by day 2"},
+      {id:"e-25", label:"Pepto-Bismol or antacid tablets",               note:"Rich park food can hit hard — be prepared"},
+      {id:"e-26", label:"Motion sickness tablets",                        note:"For simulators, 3D rides and spinning attractions"},
+      {id:"e-27", label:"Hand sanitizer (travel size)",                   note:"Use before eating anything in the park"},
+      {id:"e-28", label:"Wet wipes / baby wipes",                        note:"Useful for sticky hands, spills and cleanup"},
+      {id:"e-29", label:"Small first aid kit",                            note:"Band-aids, antiseptic wipe, tweezers — just in case"},
+    ],
+  },
+  {
+    cat:"📱 Tech & Gear", color:P.mid,
+    items:[
+      {id:"e-30", label:"Phone charging cable + wall plug",              note:"Don't rely on finding USB ports at hotels"},
+      {id:"e-31", label:"Earbuds or earphones",                          note:"Useful for queues, travel days and loud shows"},
+      {id:"e-32", label:"Screenshot of hotel reservation",               note:"In case of check-in issues or app failures"},
+      {id:"e-33", label:"Screenshot of all ticket confirmations",        note:"Backup in case Disney app is down"},
+      {id:"e-34", label:"Ziploc bag for phone on water rides",           note:"Keeps your phone dry on Tiana's, Frozen, etc."},
+    ],
+  },
+  {
+    cat:"✨ Magic Extras", color:P.rose,
+    items:[
+      {id:"e-35", label:"Mickey ears or themed headband",                note:"You'll want them — trust us. Matching family ears = best photos"},
+      {id:"e-36", label:"Autograph book + thick Sharpie",               note:"Sharpies sign faster than Bic pens — cast members prefer them"},
+      {id:"e-37", label:"Birthday / celebration button",                 note:"Free at Guest Relations — cast members make a big deal of it"},
+      {id:"e-38", label:"Small gift for character interactions",         note:"Characters often react adorably to little gifts or letters"},
+      {id:"e-39", label:"Glow accessories for evening / fireworks",      note:"Light-up ears, wands and necklaces are magical after dark"},
+      {id:"e-40", label:"Comfortable bag hook / carabiner",              note:"For hanging your bag on ride restraints and stroller handles"},
+    ],
+  },
+];
+
+function PackingListTab() {
+  const [essentialChecked, setEssentialChecked] = useState({});
+  const [customItems, setCustomItems]           = useState([]);
+  const [newItemText, setNewItemText]           = useState("");
+  const [newItemNote, setNewItemNote]           = useState("");
+  const [activeFilter, setActiveFilter]         = useState("All");
+  const [loading, setLoading]                   = useState(true);
+  const [showAddForm, setShowAddForm]           = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const stored = await safeGet("packing-list");
+      if (stored) {
+        setEssentialChecked(stored.essentialChecked || {});
+        setCustomItems(stored.customItems || []);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const persist = async (checked, custom) => {
+    await safeSet("packing-list", { essentialChecked: checked, customItems: custom });
+  };
+
+  const toggleEssential = async (id) => {
+    const updated = { ...essentialChecked, [id]: !essentialChecked[id] };
+    setEssentialChecked(updated);
+    await persist(updated, customItems);
+  };
+
+  const toggleCustom = async (id) => {
+    const updated = customItems.map(item => item.id===id ? {...item,checked:!item.checked} : item);
+    setCustomItems(updated);
+    await persist(essentialChecked, updated);
+  };
+
+  const addCustomItem = async () => {
+    if (!newItemText.trim()) return;
+    const updated = [...customItems, {id:`c-${Date.now()}`,label:newItemText.trim(),note:newItemNote.trim(),checked:false}];
+    setCustomItems(updated);
+    setNewItemText(""); setNewItemNote(""); setShowAddForm(false);
+    await persist(essentialChecked, updated);
+  };
+
+  const removeCustomItem = async (id) => {
+    const updated = customItems.filter(item => item.id !== id);
+    setCustomItems(updated);
+    await persist(essentialChecked, updated);
+  };
+
+  const clearAll = async () => {
+    setEssentialChecked({});
+    const updated = customItems.map(i=>({...i,checked:false}));
+    setCustomItems(updated);
+    await persist({}, updated);
+  };
+
+  const totalEssential = ESSENTIAL_PACKING.reduce((s,c)=>s+c.items.length,0);
+  const checkedEssential = Object.values(essentialChecked).filter(Boolean).length;
+  const totalCustom = customItems.length;
+  const checkedCustom = customItems.filter(i=>i.checked).length;
+  const totalAll = totalEssential + totalCustom;
+  const checkedAll = checkedEssential + checkedCustom;
+  const pct = totalAll > 0 ? Math.round((checkedAll / totalAll) * 100) : 0;
+  const cats = ["All", ...ESSENTIAL_PACKING.map(c=>c.cat)];
+
+  if (loading) return <div style={{textAlign:"center",padding:40,color:P.mid}}>✨ Loading your packing list...</div>;
+
+  const CheckRow = ({id,label,note,checked,onToggle,onRemove,color}) => (
+    <div onClick={onToggle} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"12px 14px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",background:checked?`${color}18`:P.white,border:`1.5px solid ${checked?color:P.border}`,marginBottom:8}}>
+      <div style={{width:22,height:22,borderRadius:6,flexShrink:0,marginTop:1,border:`2px solid ${checked?color:P.border}`,background:checked?color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.18s"}}>
+        {checked && <svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:14,fontWeight:checked?600:700,color:checked?P.gray:P.dark,textDecoration:checked?"line-through":"none",lineHeight:1.4}}>{label}</div>
+        {note && <div style={{fontSize:11,color:checked?P.border:P.gray,marginTop:2,lineHeight:1.4}}>{note}</div>}
+      </div>
+      {onRemove && <button onClick={e=>{e.stopPropagation();onRemove();}} style={{background:"none",border:"none",color:"#ddd",fontSize:16,cursor:"pointer",padding:"0 2px",flexShrink:0}}>✕</button>}
+    </div>
+  );
+
+  return (
+    <div>
+      <Card style={{marginBottom:20,background:`linear-gradient(135deg,${P.dark},${P.mid})`,color:"#fff"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div>
+            <div style={{fontSize:12,opacity:.7,fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>Packing Progress</div>
+            <div style={{fontSize:26,fontWeight:900,marginTop:2}}>{checkedAll} <span style={{fontSize:16,opacity:.7}}>/ {totalAll} items packed</span></div>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:32,fontWeight:900,color:pct===100?P.gold:P.pink}}>{pct}%</div>
+            {pct===100 && <div style={{fontSize:11,color:P.gold,fontWeight:700}}>You're ready! ✨</div>}
+          </div>
+        </div>
+        <div style={{height:10,background:"rgba(255,255,255,0.15)",borderRadius:99,overflow:"hidden"}}>
+          <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${P.pink},${P.gold})`,borderRadius:99,transition:"width 0.4s ease"}}/>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:8,fontSize:11,opacity:.7}}>
+          <span>✅ {checkedEssential}/{totalEssential} essential</span>
+          <span>📝 {checkedCustom}/{totalCustom} custom</span>
+          {checkedAll>0 && <button onClick={clearAll} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:11,cursor:"pointer",padding:0,textDecoration:"underline"}}>Reset all</button>}
+        </div>
+      </Card>
+
+      <div style={{overflowX:"auto",display:"flex",gap:8,marginBottom:20,paddingBottom:4}}>
+        {cats.map(cat=>{
+          const catData=ESSENTIAL_PACKING.find(c=>c.cat===cat);
+          const active=activeFilter===cat;
+          return <button key={cat} onClick={()=>setActiveFilter(cat)} style={{padding:"6px 14px",borderRadius:99,whiteSpace:"nowrap",border:`2px solid ${active?(catData?.color||P.pink):P.border}`,background:active?(catData?.color||P.pink):"transparent",color:active?"#fff":P.dark,fontWeight:700,fontSize:12,cursor:"pointer",flexShrink:0}}>{cat==="All"?"All Items":cat}</button>;
+        })}
+      </div>
+
+      {(activeFilter==="All" || ESSENTIAL_PACKING.some(c=>c.cat===activeFilter)) && (
+        <div style={{marginBottom:28}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+            <div style={{fontWeight:900,fontSize:16,color:P.dark}}>⭐ Essential Packing List</div>
+            <div style={{fontSize:11,color:P.gray,fontWeight:600}}>{checkedEssential}/{totalEssential} checked</div>
+          </div>
+          {ESSENTIAL_PACKING.filter(cat=>activeFilter==="All"||cat.cat===activeFilter).map(cat=>{
+            const catChecked=cat.items.filter(i=>essentialChecked[i.id]).length;
+            return (
+              <div key={cat.cat} style={{marginBottom:20}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 14px",borderRadius:10,marginBottom:8,background:`${cat.color}22`,borderLeft:`4px solid ${cat.color}`}}>
+                  <span style={{fontWeight:800,fontSize:14,color:P.dark}}>{cat.cat}</span>
+                  <span style={{fontSize:11,fontWeight:700,color:catChecked===cat.items.length?cat.color:P.gray}}>{catChecked===cat.items.length?"✓ Done!":`${catChecked}/${cat.items.length}`}</span>
+                </div>
+                {cat.items.map(item=><CheckRow key={item.id} id={item.id} label={item.label} note={item.note} checked={!!essentialChecked[item.id]} onToggle={()=>toggleEssential(item.id)} color={cat.color}/>)}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {activeFilter==="All" && (
+        <div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{fontWeight:900,fontSize:16,color:P.dark}}>📝 My Custom Items</div>
+              {totalCustom>0 && <div style={{fontSize:11,color:P.gray,fontWeight:600}}>{checkedCustom}/{totalCustom} checked</div>}
+            </div>
+            <button onClick={()=>setShowAddForm(v=>!v)} style={{padding:"8px 16px",borderRadius:99,border:`2px solid ${P.pink}`,background:showAddForm?P.pink:"transparent",color:showAddForm?"#fff":P.pink,fontWeight:800,fontSize:13,cursor:"pointer"}}>{showAddForm?"✕ Cancel":"+ Add Item"}</button>
+          </div>
+          {showAddForm && (
+            <Card style={{marginBottom:16,borderLeft:`4px solid ${P.pink}`}}>
+              <div style={{fontWeight:700,fontSize:13,color:P.dark,marginBottom:10}}>Add a custom item</div>
+              <input value={newItemText} onChange={e=>setNewItemText(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")addCustomItem();}} placeholder="What do you need to pack?" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${P.border}`,fontSize:14,color:P.dark,background:P.cream,boxSizing:"border-box",marginBottom:8}} autoFocus/>
+              <input value={newItemNote} onChange={e=>setNewItemNote(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")addCustomItem();}} placeholder="Note or reminder (optional)" style={{width:"100%",padding:"9px 14px",borderRadius:10,border:`1.5px solid ${P.border}`,fontSize:12,color:P.dark,background:P.cream,boxSizing:"border-box",marginBottom:12}}/>
+              <button onClick={addCustomItem} disabled={!newItemText.trim()} style={{width:"100%",padding:"11px",borderRadius:10,border:"none",background:newItemText.trim()?P.pink:"#ddd",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer"}}>Add to My List</button>
+            </Card>
+          )}
+          {customItems.length===0 && !showAddForm ? (
+            <Card style={{textAlign:"center",padding:28,color:P.gray}}>
+              <div style={{fontSize:28,marginBottom:8}}>📝</div>
+              <div style={{fontWeight:700,marginBottom:4}}>No custom items yet</div>
+              <div style={{fontSize:12}}>Tap "+ Add Item" to add anything specific to your trip.</div>
+            </Card>
+          ) : (
+            <div>{customItems.map(item=><CheckRow key={item.id} id={item.id} label={item.label} note={item.note} checked={item.checked} onToggle={()=>toggleCustom(item.id)} onRemove={()=>removeCustomItem(item.id)} color={P.pink}/>)}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 const TABS = [
   {id:"home",label:"🏰 Home"},
@@ -2343,6 +2587,7 @@ const TABS = [
   {id:"ll",label:"⚡ LL Scheduler"},
   {id:"characters",label:"🎭 Characters"},
   {id:"photos",label:"📸 Photo Album"},
+  {id:"packing",label:"🎒 Packing List"},
   {id:"transport",label:"🚌 Transportation"},
   {id:"mk",label:"Magic Kingdom"},
   {id:"ep",label:"EPCOT"},
@@ -2474,6 +2719,7 @@ export default function App() {
                 {label:"⚡ LL Scheduler",desc:"Time-block your Lightning Lanes",tab:"ll",color:P.dark},
                 {label:"🎭 Characters",desc:"Track meets & time your waits",tab:"characters",color:P.rose},
                 {label:"📸 Photo Album",desc:"Organize & share trip photos",tab:"photos",color:P.gold},
+                {label:"🎒 Packing List",desc:"Essential items + build your own list",tab:"packing",color:P.mint},
                 {label:"🚌 Transportation",desc:"Park-to-park routes & tips",tab:"transport",color:P.mint},
                 {label:"🎢 Ride Guides",desc:"Tips, tiers, maps & Lightning Lane",tab:"mk",color:P.lilac},
                 {label:"🍽️ Dining",desc:"Plans, restaurants & must-do's",tab:"dining",color:P.peach},
@@ -2559,6 +2805,19 @@ export default function App() {
               </div>
             </div>
             <PhotoAlbumTab/>
+          </>
+        )}
+
+        {tab==="packing" && (
+          <>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+              <Mickey size={30} color={P.mint}/>
+              <div>
+                <h2 style={{margin:0,color:P.dark,fontWeight:900}}>Packing List</h2>
+                <p style={{margin:0,fontSize:13,color:"#888"}}>Essential items + your own custom checklist</p>
+              </div>
+            </div>
+            <PackingListTab/>
           </>
         )}
 
